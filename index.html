@@ -504,6 +504,7 @@ Object.assign(sfx,{
   drown(){noise(.35,.9);tone(400,.4,'triangle',.6,0,-300);},
   swirl(){tone(300,.6,'triangle',.4,0,200);tone(250,.6,'triangle',.3,.2,-100);},
   laugh(){[0,1,2].forEach(k=>tone(520-k*40,.07,'square',.3,k*.11,-120));},
+  power(){[0,4,7,12,16,19,24].forEach((n,k)=>tone(523*Math.pow(2,n/12),.09,'square',.5,k*.05));},
   quack(){tone(700,.07,'square',.4,0,-300);tone(650,.07,'square',.4,.1,-300);}
 });
 
@@ -582,7 +583,9 @@ function hint(key,text){if(hinted[key])return;hinted[key]=1;banner={text,t:3.2};
 function dogsJump(){const k0=P.i|0,lat=toLocal(P.x,P.y,PX[k0],PY[k0],PA[k0]).v,sd=lat>=0?1:-1,pa=PA[k0];
   for(const g of P.dogs){const sp=rnd(26,36);objs.push({type:'dogswim',kind:g.kind,x:P.x+rnd(-8,8),y:P.y+rnd(-6,6),vx:-Math.sin(pa)*sd*sp+Math.cos(pa)*12,vy:Math.cos(pa)*sd*sp+Math.sin(pa)*12,life:7,i:P.i,ph:rnd(0,6)});}
   splash(P.x,P.y,16,false);pop(P.dogs.length>1?'СОБАКИ СБЕЖАЛИ!':DOGNAME[P.dogs[0].kind]+' СБЕЖАЛ!',P.x,P.y-56,'#f8d030');sfx.bark();P.dogs=[];}
-function hit(msg){if(inv>0)return;lives--;inv=2;shake=.45;P.v*=.3;sfx.hit();splash(P.x,P.y,26,true);pop(msg,P.x,P.y-40,'#fcfcfc');if(P.dogs.length)dogsJump();
+const APEROL=mk(10,19,d=>{d.r(4,0,3,2,'#3a2a1a');d.r(4,2,3,4,'#e8601c');d.r(4,2,1,4,'#f8a060');d.r(2,6,7,12,'#f05a10');d.r(3,7,1,10,'#f8a060');d.r(7,7,1,10,'#b8400c');
+  d.r(2,9,7,5,'#f8f0e0');d.r(3,10,5,1,'#d82020');d.r(3,12,5,1,'#f86a1c');d.r(2,17,7,1,'#b8400c');});
+function hit(msg){if(inv>0||P.power>0)return;lives--;inv=2;shake=.45;P.v*=.3;sfx.hit();splash(P.x,P.y,26,true);pop(msg,P.x,P.y-40,'#fcfcfc');if(P.dogs.length)dogsJump();
   if(lives<=0){state='over';overT=0;parts=[];pops=[];sfx.over();if(score()>best){best=score();try{localStorage.setItem('sup-tigr-best',best);}catch(e){}}}}
 
 /* ---------- spawning along the river ---------- */
@@ -602,6 +605,7 @@ function spawnAt(i,diff){genToI(i+300);const p=at(i),hw=p.hw,r=Math.random(),sid
     g.m.forEach((m,k)=>objs.push({type:'rider',role:'friend',i:i+k*2,d:clamp(c0+(k-(n-1)/2)*sp,-hw+24,hw-24),spd:10,ph:rnd(0,6)+k,p:m.p,b:BD[m.b],sit:m.sit,dog:m.dog,
       shoulder:m.shoulder,front:m.front,p2:m.p2,blade:m.blade,say:g.say[k],sayDelay:k*2.8,snd:k===0?g.snd:null}));}
   if(Math.random()<.11&&P.maxI>350)spawnShoal(i+40);
+  if(Math.random()<.06&&P.maxI>300){const q=wpos(i+16,rnd(-hw*.5,hw*.5));objs.push({type:'aperol',x:q.x,y:q.y,i:i+16,ph:rnd(0,6)});}
   if(Math.random()<.09&&P.maxI>400)spawnRaid(i+44);
   if(Math.random()<.1)spawnRaft(i+20);
   if(Math.random()<.1&&P.maxI>300)spawnJumper(i+52,Math.random()<.5?-1:1);
@@ -769,7 +773,7 @@ function updatePlayer(dt,auto){
     if(!o.felt&&!auto){o.felt=1;banner={text:'ВОДОВОРОТ! ГРЕБИ ВВЕРХ И РУЛИ',t:2.4};sfx.swirl();}}}
   P.a+=turn*(P.sit?2.6:2.1)*dt;
   P.a=Math.atan2(Math.sin(P.a),Math.cos(P.a));
-  P.v+=((P.sit?60:88)*thr-P.v)*Math.min(1,dt*1.6);
+  if(P.power>0)thr*=1.25;P.v+=((P.sit?60:88)*thr-P.v)*Math.min(1,dt*1.6);
   P.x+=(Math.cos(P.a)*P.v+Math.cos(pa)*24)*dt;P.y+=(Math.sin(P.a)*P.v+Math.sin(pa)*24)*dt;
   const lim=hw-13;
   if(Math.abs(lat)>lim){const s=Math.sign(lat),ov=Math.abs(lat)-lim;P.x+=Math.sin(pa)*s*ov;P.y-=Math.cos(pa)*s*ov;P.v*=.96;
@@ -781,6 +785,9 @@ function updatePlayer(dt,auto){
   if(itemQ){itemQ=false;cycleItem(true);}
   if(throwQ){throwQ=false;if(!auto)throwItem();}
   if(hitQ){hitQ=false;if(!auto&&strikeT<=0){strikeT=.36;P.struck=false;sfx.whoosh();}}
+  if(P.power>0){P.power-=dt;if(Math.random()<dt*25)parts.push({x:P.x+rnd(-18,18),y:P.y+rnd(-10,6)-P.h,vx:rnd(-10,10),vy:-rnd(20,50),life:rnd(.3,.6),c:pick(['#f8d030','#f86a1c','#fcfcfc']),nog:1});
+    for(const o of targets()){const q=tpos(o);if(Math.hypot(q.x-P.x,q.y-P.y)<24){knock(o,'melon');pop('СНЁС!',q.x,q.y-24,'#f8a060');}}
+    if(P.power<=0){P.power=0;inv=Math.max(inv,1);banner={text:'АПЕРОЛЬ КОНЧИЛСЯ',t:1.4};}}
   if(P.dogs.length){if(P.dogSay>0)P.dogSay-=dt;else if(Math.random()<dt*.12&&!auto){P.dogSay=.9;sfx.bark();}
     for(const g of P.dogs){g.pt-=dt;if(g.pt<=0){const q=Math.random();g.pose=q<.5?'sit':q<.8?'lie':'paws';g.pt=rnd(2,5);}}}
   if(strikeT>0){strikeT-=dt;if(!P.struck&&strikeT<.2){P.struck=true;paddleStrike();}}
@@ -875,6 +882,7 @@ function collide(){
         if(q<1){const k=Math.sqrt(q)||.01,tu=l.u/k,tv=l.v/k,nu=tu-l.u,nv=tv-l.v,co=Math.cos(o.a),si=Math.sin(o.a);P.x+=nu*co-nv*si;P.y+=nu*si+nv*co;P.v*=.9;
           if(t-(o.lastG||0)>.8){o.lastG=t;splash(P.x,P.y,6,false);sfx.bank();pop('МЕЛЬ!',P.x,P.y-36,'#e4cc92');}}
         if(!o.scored&&P.i>o.i+o.ru/STEP+6){o.scored=1;if(!o.touched){bonus+=50;sfx.hi();pop('АККУРАТНО! +50',P.x,P.y-40,'#a4e4fc');}}break;}
+      case'aperol':if(Math.hypot(o.x-P.x,o.y-P.y)<16){o.dead=1;P.power=8;sfx.power();banner={text:'АПЕРОЛЬ! НЕПОБЕДИМ!',t:2};pop('АПЕРОЛЬ!',P.x,P.y-44,'#f86a1c');}break;
       case'raid':{const q=raidPos(o);if(Math.hypot(q.x-P.x,q.y-P.y)<20&&air<12&&!(o.bump>0)){o.bump=1.5;hit('БАЦ!');}break;}
       case'raft':{const q=wpos(o.i,o.d);if(Math.hypot(q.x-P.x,q.y-P.y)<22&&air<12&&!(o.bump>0)){o.bump=1.6;o.ksay='ЭЙ!';o.ksayT=1;hit('ОСТОРОЖНО, СЕМЬЯ!');}
         if(!o.scored&&P.i>o.i+8){o.scored=1;if(Math.abs(o.d-latOf())<50){bonus+=25;sfx.hi();pop('ПРИВЕТ! +25',q.x,q.y-40,'#a4e4fc');}}break;}
@@ -987,6 +995,7 @@ function drawRider(o){const q=riderPos(o),sx=SX(q.x),sy=SY(q.y);if(sx<-60||sx>W+
 function flipDog(kind,fr,fc,pose){const c=dogSprite(kind,fr,pose);if(fc!=='w')return c;const k='dogf'+kind+fr+(pose||'sit');let f=PC.get(k);if(!f){f=flip(c);PC.set(k,f);}return f;}
 function drawPlayer(){if(inv>0&&state==='play'&&Math.floor(inv*12)%2)return;
   const wob=!P.sit&&P.h===0?Math.round(Math.sin(t*5)):0,sx=SX(P.x)+wob,sy=SY(P.y),h=Math.round(P.h),e=boardImg(BD.hero,P.a);
+  if(P.power>0){const fl=Math.floor(t*10)%2;ell(sx,sy+2,Math.round(26+Math.sin(t*12)*2),10,fl?'#f86a1c':'#f8d030');ell(sx,sy+2,20,7,fl?'#f8d030':'#fce0a0');}
   if(h>0){ell(sx,sy+2,15,4,'rgba(6,40,58,.45)');ctx.drawImage(e.img,sx-e.img.m,sy-e.img.m-h);}else boardAt(e,sx,sy,0);
   const fc=facingOf(P.a),sit=P.trans>0?true:P.sit;
   const swing=()=>{const k=1-strikeT/.36,ang=P.a+Math.PI/2-k*Math.PI,cy=sy-h-12,ex=sx+Math.cos(ang)*30,ey=cy+Math.sin(ang)*18;
@@ -1010,6 +1019,9 @@ function drawObj(o){
       ctx.fillStyle='#b4d8bc';ctx.fillRect(sx-(o.vd<0?-8:12),sy+3,5,1);ctx.drawImage(f,sx-11,sy-8);break;}
     case'lodge':{const q=wpos(o.i,o.side*(at(o.i).hw+18));ctx.drawImage(LODGE,SX(q.x)-23,SY(q.y)-24);break;}
     case'whirl':case'ford':case'shoal':break;
+    case'aperol':{const sx=SX(o.x),sy=SY(o.y),b=Math.round(Math.sin(t*3+o.ph)*1.5),gl=Math.floor(t*6+o.ph)%2;
+      ell(sx,sy+3,10,3,gl?'#f8a060':'#d6e8d4');ctx.drawImage(APEROL,sx-5,sy-16+b);
+      if(gl){ctx.fillStyle='#fcfcfc';ctx.fillRect(sx+6,sy-17+b,1,3);ctx.fillRect(sx+5,sy-16+b,3,1);}break;}
     case'dogswim':{const img=flipDog(o.kind,Math.floor(t*6+o.ph)%2,o.vx<0?'w':'e'),sx=SX(o.x),sy=SY(o.y)+Math.round(Math.sin(t*5+o.ph));
       ell(sx,sy+1,8,2,'#d6e8d4');ctx.drawImage(img,0,0,22,11,sx-11,sy-10,22,11);break;}
     case'swimmer':swimTop(SX(o.x),SY(o.y),o.p,1.15);if(o.sayT>0&&state==='play')bubble(o.say,SX(o.x),SY(o.y)-16);break;
@@ -1111,6 +1123,7 @@ function render(){
   drawWarnings();
   ctx.restore();
   drawHUD();
+  if(P.power>0&&state==='play'){const w=Math.round(P.power/8*96);panelBox(CX-52,H-23,104,21,'#6a2a08');ctx.fillStyle=Math.floor(t*8)%2?'#f86a1c':'#f8d030';ctx.fillRect(CX-48,H-19,w,3);txt('АПЕРОЛЬ',CX,H-14,'#fce0a0','center');}
   if(banner&&banner.t>0){ctx.font='8px '+FONT;const w=Math.ceil(ctx.measureText(banner.text).width)+12;ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(CX-w/2,24,w,14);if(Math.floor(t*4)%2||banner.t<2)txt(banner.text,CX,27,'#f8d030','center');}
   if(state==='title')drawTitle();
   if(state==='controls')drawControls();
@@ -1141,7 +1154,7 @@ function drawOver(){panel(62,90);txt('ПРОПЛЫЛ '+kmNow()+' КМ',CX,118,'#
   if(overT>FALL_LEN+.5&&Math.floor(t*2)%2)txt('ENTER - ЕЩЁ РАЗ',CX,134,'#f8d030','center');}
 
 /* ---------- input ---------- */
-function startGame(){initAudio();resetWorld();state='play';P.dogs=[];P.dogSay=0;lives=6;for(const k of ITEMS)INV[k]=0;INV.beer=3;K.fire=0;sel='beer';strikeT=0;inv=1.5;bonus=0;parts=[];pops=[];hinted={};
+function startGame(){initAudio();resetWorld();state='play';P.power=0;P.dogs=[];P.dogSay=0;lives=6;for(const k of ITEMS)INV[k]=0;INV.beer=3;K.fire=0;sel='beer';strikeT=0;inv=1.5;bonus=0;parts=[];pops=[];hinted={};
   banner={text:'C - БРОСОК  Q - ВЕЩЬ  V - ВЕСЛО',t:4};step=0;sfx.start();}
 function press(){initAudio();
   if(state==='intro'){state='title';parts=[];}
