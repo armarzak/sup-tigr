@@ -562,7 +562,10 @@ const BEAVER=[0,1].map(f=>mk(23,14,d=>{d.e(4,8,3,2,'#3a2a1a');d.p(3,7,'#5a4a3a')
 const LODGE=mk(46,28,d=>{d.e(23,18,21,9,'#5a3a1e');for(let i=0;i<46;i++){const x=4+Math.floor(srnd()*38),y=11+Math.floor(srnd()*14),L=4+Math.floor(srnd()*7);d.l(x,y,x+L,y+(srnd()<.5?-2:2),i%2?'#8a6a3a':'#3a2410',1);}d.e(23,25,5,2,'#1a1008');});
 const FST=[['#4a4636','#655e48','#7e7660','#9c937a','#56742e','#6a4a2c','#b0a88c'],['#4c4a3a','#6a6650','#848068','#a29c80','#4e6c2a','#5e4428','#b8b096'],['#463e32','#5e5444','#78705a','#948a70','#5a7a34','#704e30','#aca084']];
 const FORD_STONES=[rockSprite(9,6,FST[0]),rockSprite(8,6,FST[1]),rockSprite(10,7,FST[2]),rockSprite(9,7,FST[1])];
-const CRATE=mk(20,15,d=>{d.r(1,2,18,12,'#f8c020');d.r(1,2,18,2,'#fce070');d.r(1,12,18,2,'#c08a10');for(let x=3;x<18;x+=3){d.r(x,4,2,7,'#5a3410');d.r(x,4,2,1,'#e0d090');}});
+const CRATE=mk(22,17,d=>{d.r(1,8,20,8,'#1f7a34');d.r(1,8,20,1,'#2e9a46');d.r(1,15,20,1,'#145a24');d.r(8,10,6,2,'#0e3a18');d.r(4,9,1,6,'#176a2c');d.r(17,9,1,6,'#176a2c');d.r(2,12,4,2,'#f8d030');d.r(16,12,4,2,'#f8d030');
+  d.r(1,1,20,7,'#145a24');d.r(1,1,20,1,'#3ab85a');d.r(1,1,1,7,'#2e9a46');d.r(20,1,1,7,'#0e4a1c');
+  for(let j=0;j<2;j++)for(let i=0;i<5;i++){const x=2+i*4,y=2+j*3;d.r(x,y,3,3,'#5a3010');d.r(x,y,3,1,'#7a4a1a');d.p(x+1,y+1,'#f8d030');d.p(x+1,y,'#fce890');}});
+function dropCrate(x,y,i){objs.push({type:'pick',kind:'beer',x,y,i,ph:rnd(0,6)});splash(x,y,8,false);pop('ЯЩИК ПИВА!',x,y-22,'#f8d030');}
 const P={dogs:[],x:0,y:0,a:-Math.PI/2,v:0,i:0,sit:true,trans:0,toSit:true,jt:0,h:0,phase:0,maxI:0,lastBank:0,lastS:0};
 let best=0;try{best=+localStorage.getItem('sup-tigr-best')||0;}catch(e){}
 const K={l:0,r:0,u:0,d:0};
@@ -663,8 +666,8 @@ function knock(o,how){
     splash(q.x,q.y,8,false);pop('ТОЛЧОК! ЕЩЁ РАЗ - УПАДЁТ',q.x,q.y-34,'#fcfcfc');return;}
   fall(o);}
 function fall(o){const q=tpos(o);o.fallen=true;o.fallT=0;o.sayT=0;splash(q.x,q.y,24,true);sfx.drown();
-  if(o.type==='fisher'){bonus+=40;pop('ИСКУПАЛСЯ! +40',q.x,q.y-30);return;}
-  if(o.role==='boat'){bonus+=80;pop('ЛОДКА КВЕРХУ ДНОМ! +80',q.x,q.y-30);o.spd=5;return;}
+  if(o.type==='fisher'){bonus+=40;pop('ИСКУПАЛСЯ! +40',q.x,q.y-30);const w=wpos(o.i,o.side*(at(o.i).hw-30));dropCrate(w.x,w.y,o.i);return;}
+  if(o.role==='boat'){bonus+=80;pop('ЛОДКА КВЕРХУ ДНОМ! +80',q.x,q.y-30);o.spd=5;dropCrate(q.x+rnd(-14,14),q.y+rnd(8,16),o.i|0);return;}
   o.spd=6;o.swimSide=Math.random()<.5?-1:1;
   if(o.role==='over'){bonus+=50;pop('ПЛЮХ! +50',q.x,q.y-30);}else pop('ЭЙ, СВОИ ЖЕ!',q.x,q.y-30,'#fcfcfc');}
 function paddleStrike(){let n=0;for(const o of targets()){const q=tpos(o);if(Math.hypot(q.x-P.x,q.y-P.y)<42){knock(o,'paddle');n++;}}
@@ -714,12 +717,13 @@ function spawnShoal(i){const p=at(i),hw=p.hw,side=Math.random()<.5?-1:1,ru=rnd(5
   people.forEach(p0=>{const kid=!!p0.k,ang=kid?rnd(0,6.283):g0+(ak++)*.5+(ak>3?2.6:0),rr=kid?rnd(.25,1.05):rnd(.66,.8),u=Math.cos(ang)*ru*rr,v=Math.sin(ang)*rv*rr;
     objs.push({type:'bather',sh,i,p:p0,kid,u,v,hu:u,hv:v,tu:u,tv:v,re:rnd(0,2),ph:rnd(0,6),swim:false,ring:p0.id==='bk3',fc:'s',sayT:0,say:''});});
   const pk=[['boat',null],['sup',BD.teal],['sup',BD.sky]];pk.forEach(([kind,b],k)=>{const ang=g0+Math.PI+(k-1)*.55,u=Math.cos(ang)*ru*.98,v=Math.sin(ang)*rv*.98,q=bPos({sh,u,v});
-    objs.push({type:'parked',kind,b,x:q.x,y:q.y,a:Math.atan2(q.y-sh.y,q.x-sh.x)+Math.PI/2+rnd(-.3,.3),i});});}
+    objs.push({type:'parked',kind,b,x:q.x,y:q.y,a:Math.atan2(q.y-sh.y,q.x-sh.x)+Math.PI/2+rnd(-.3,.3),i});});
+  {const q=bPos({sh,u:rnd(-ru*.3,ru*.3),v:-side*rv});objs.push({type:'pick',kind:'beer',x:q.x,y:q.y,i,ph:rnd(0,6)});}}
 function bPos(o){const sh=o.sh,dx=Math.cos(sh.a),dy=Math.sin(sh.a),nx=-Math.sin(sh.a),ny=Math.cos(sh.a);return{x:sh.x+dx*o.u+nx*o.v,y:sh.y+dy*o.u+ny*o.v};}
 function inSand(o){const sh=o.sh;return(o.u/sh.ru)*(o.u/sh.ru)+(o.v/sh.rv)*(o.v/sh.rv)<.5;}
 function drawShoal(o){const sx=SX(o.x),sy=SY(o.y);if(sx<-140||sx>W+140||sy<-140||sy>H+140)return;ctx.drawImage(o.img,sx-o.img.m,sy-o.img.m);
   const dx=Math.cos(o.a),dy=Math.sin(o.a),nx=-Math.sin(o.a),ny=Math.cos(o.a);
-  ctx.drawImage(UMBRELLA,Math.round(sx-dx*12+nx*8)-15,Math.round(sy-dy*12+ny*8)-20);ctx.drawImage(COOLER,Math.round(sx+dx*10-nx*10)-8,Math.round(sy+dy*10-ny*10)-8);ctx.drawImage(CRATE,Math.round(sx+dx*16+nx*12)-10,Math.round(sy+dy*16+ny*12)-10);
+  ctx.drawImage(UMBRELLA,Math.round(sx-dx*12+nx*8)-15,Math.round(sy-dy*12+ny*8)-20);ctx.drawImage(COOLER,Math.round(sx+dx*10-nx*10)-8,Math.round(sy+dy*10-ny*10)-8);
   const bx=Math.round(sx-dx*4-nx*14),by=Math.round(sy-dy*4-ny*14);ctx.drawImage(BOOMBOX,bx-9,by-6);
   for(let k=0;k<3;k++){const ph=((t*18+k*11)%33),nx2=bx-6+k*6+Math.round(Math.sin(t*3+k)*2),ny2=by-8-ph;ctx.fillStyle=k%2?'#f8d030':'#fcfcfc';ctx.fillRect(nx2,ny2,2,2);ctx.fillRect(nx2+1,ny2-4,1,4);ctx.fillRect(nx2+1,ny2-4,2,1);}}
 const HERO_PS=[0,1,2,3,4].map(l=>Object.assign({},HERO_P,{id:'hero'+l,bpLvl:l}));
