@@ -51,7 +51,7 @@ canvas{display:block;width:100%;aspect-ratio:320/240;image-rendering:pixelated;i
     <span class="tag">РЕЧНОЙ ХАОС · 1 ИГРОК</span>
     <button class="mute" id="mute" type="button">ЗВУК: ВКЛ</button>
   </header>
-  <div class="tv"><canvas id="scr" width="320" height="240" aria-label="Игровой экран"></canvas></div>
+  <div class="tv"><canvas id="scr" width="384" height="288" aria-label="Игровой экран"></canvas></div>
   <div class="help">
     <span><b>← →</b> поворот</span>
     <span><b>↑</b> грести сильнее</span>
@@ -76,7 +76,7 @@ canvas{display:block;width:100%;aspect-ratio:320/240;image-rendering:pixelated;i
 (()=>{
 const cv=document.getElementById('scr'), ctx=cv.getContext('2d');
 ctx.imageSmoothingEnabled=false;
-const W=320,H=240,CX=160,HY=84;
+const W=384,H=288,CX=192,HY=84;
 const FONT='"Press Start 2P", monospace';
 const SKIN='#f0b898',SKIN_D='#c98a70';
 /* ---------- pixel toolkit ---------- */
@@ -463,14 +463,14 @@ const CAP=(s,y,col='#fcfcfc',edge='#14306a')=>{ctx.font='16px '+FONT;ctx.textAli
 const FALL_LEN=5.2;
 function drawFall(T){
   sideBG(true);
-  const cx=150,wy=196,L=124;
+  const cx=CX-10,wy=H-44,L=124;
   let b,tail,flipped=false;
   if(T<1.2){b=Math.sin(T*7)*.13;tail=[cx-Math.cos(b)*62,wy-Math.sin(b)*62];}
   else if(T<2){const k=(T-1.2)/.8;b=lerp(0,-1.4,k*k);tail=[cx-62+k*10,wy+k*8];}
   else if(T<2.6){const k=(T-2)/.6;b=lerp(-1.4,0,k*k);tail=[cx-52,wy+8-k*8];}
   else{b=Math.sin(T*2)*.03;tail=[cx-58,wy+2];flipped=true;}
   // other swimmers from the video
-  swimmer(258,206+Math.round(Math.sin(t*2)*1.5),'#f87818',false);swimmer(292,212+Math.round(Math.sin(t*2.4+1)*1.5),'#5a3a1a',T>3);
+  swimmer(CX+98,wy+10+Math.round(Math.sin(t*2)*1.5),'#f87818',false);swimmer(CX+132,wy+16+Math.round(Math.sin(t*2.4+1)*1.5),'#5a3a1a',T>3);
   sideBoard(tail[0],tail[1],b,L,flipped);
   if(T<2.1){
     ctx.save();ctx.beginPath();ctx.rect(0,0,W,wy+3);ctx.clip();
@@ -489,7 +489,7 @@ function drawFall(T){
 }
 function drawIntro(){
   sideBG(false);
-  const P=introPose(),cx=150,wy=196,b=P.b;
+  const P=introPose(),cx=CX-10,wy=H-44,b=P.b;
   sideBoard(cx-Math.cos(b)*62,wy-Math.sin(b)*62,b,124,false);
   ctx.fillStyle='#e8f4f0';for(let i=0;i<5;i++)ctx.fillRect(cx-60+i*28+Math.round(Math.sin(t*4+i)*2),wy+5,8,1);
   const fy=wy-4;sideHero([cx-9,fy-Math.sin(b)*9],[cx+9,fy+Math.sin(b)*9],P);
@@ -501,7 +501,7 @@ function drawIntro(){
   if(it<4.2){cap('НУ ЧТО ТУТ',24);cap('ТАКОГО?',44);if(it>2.2){cap('НИЧЕГО',72);cap('СЛОЖНОГО!',92);}}
   else if(it<8){cap('ТЕПЕРЬ',24);cap('ВАШ ВЫХОД:',44);if(Math.floor(t*4)%2)cap('САП-ТИГР!',72);txt('ВЫСТУПЛЕНИЕ НА САПЕ',CX,98,'#f8d878','center');}
   else{cap('ОЦЕНКИ СУДЕЙ',24);const sc=['9.9','10','10','10'];
-    for(let i=0;i<4;i++)if(it>8.4+i*.45){const x=40+i*80;ctx.fillStyle='#1a1a1a';ctx.fillRect(x-22,52,44,30);ctx.fillStyle='#fcfcfc';ctx.fillRect(x-20,54,40,26);
+    for(let i=0;i<4;i++)if(it>8.4+i*.45){const x=CX-120+i*80;ctx.fillStyle='#1a1a1a';ctx.fillRect(x-22,52,44,30);ctx.fillStyle='#fcfcfc';ctx.fillRect(x-20,54,40,26);
       ctx.font='16px '+FONT;ctx.textAlign='center';ctx.fillStyle='#14306a';ctx.fillText(sc[i],x,59);ctx.fillStyle='#5a3a1a';ctx.fillRect(x-1,82,3,22);}
     if(it>10.3){cap('ИТОГО 39.9!',112);}}
   if(Math.floor(t*2)%2)txt('ENTER - ПРОПУСТИТЬ',CX,228,'#f8d878','center');
@@ -657,7 +657,7 @@ function rodTip(o){const g=fisherGeo(o),c=o.cast,k=c.T?1-Math.max(0,c.t)/c.T:0;
 
 /* ---------- throwing, paddle strikes, knocking people off ---------- */
 function cycleItem(show){const k=ITEMS.indexOf(sel);for(let n=1;n<=ITEMS.length;n++){const c=ITEMS[(k+n)%ITEMS.length];if(INV[c]>0){if(c!==sel){sel=c;sfx.mode();}break;}}if(show)banner={text:INAME[sel]+' x'+Math.ceil(INV[sel])+(sel==='gun'?'  (ДЕРЖИ C)':''),t:1.4};}
-function targets(){return objs.filter(o=>!o.fallen&&!o.dead&&((o.type==='rider'&&!(o.warn>0))||o.type==='fisher'||o.type==='beaver'||(o.type==='jumper'&&o.ph2==='ride')||(o.type==='raid'&&o.st==='cruise')||(o.type==='raft'&&!o.sinking)));}
+function targets(){return objs.filter(o=>!o.fallen&&!o.dead&&((o.type==='rider'&&!(o.warn>0))||o.type==='fisher'||o.type==='beaver'||(o.type==='jumper'&&o.ph2==='ride')||(o.type==='raid'&&(o.st==='cruise'||(o.st==='done'&&!o.bdown)))||(o.type==='raft'&&!o.sinking)));}
 function tpos(o){return o.type==='fisher'?fisherGeo(o).me:o.type==='beaver'?wpos(o.i,o.d):o.type==='jumper'?wpos(o.bi,o.bv):o.type==='raid'?raidPos(o):o.type==='raft'?wpos(o.i,o.d):riderPos(o);}
 function throwItem(){if(sel==='gun')return;if(INV[sel]<=0){cycleItem(false);if(INV[sel]<=0){banner={text:'НЕЧЕГО КИДАТЬ! ЛОВИ ЯЩИКИ И ВЕЩИ',t:1.6};return;}}
   if(sel==='gun')return;const kind=sel,T={beer:.55,apple:.4,dyna:.65,melon:.7,bag:.55}[kind];INV[kind]--;if(INV[kind]<=0)cycleItem(false);
@@ -678,6 +678,7 @@ function knock(o,how){
   if(o.type==='raft'){o.hits=(o.hits||0)+(['dyna','melon','bag'].includes(how)?2:1);o.pumping=false;o.infl=Math.max(.35,o.infl-.22);splash(q.x,q.y,12,false);
     if(o.hits>=3){o.sinking=true;o.sinkT=0;o.spd=4;bonus+=100;pop('ЛОДКА ТОНЕТ! +100',q.x,q.y-40,'#f8d030');splash(q.x,q.y,36,true);sfx.drown();o.say='ТОНЕ-Е-ЕМ!';o.sayT=1.6;o.ksay='ПАПА, НАСОС!!!';o.ksayT=1.6;}
     else{o.say=pick(['ЭЙ! ТУТ ДЕТИ!','ПРЕКРАТИ, ТИГР!','ДЫРКУ ПРОБЬЁШЬ!']);o.sayT=1.4;o.ksay='ПАП, ШИПИТ!';o.ksayT=1.2;pop('ЕЩЁ '+(3-o.hits)+'!',q.x,q.y-34,'#fcfcfc');}return;}
+  if(o.type==='raid'&&o.st==='done'){knockBuddy(o);return;}
   if(o.type==='raid'){o.st='done';objs.push({type:'swimmer',x:q.x+8,y:q.y+4,p:HAWAII,i:P.i,life:6,say:'ЗА ЧТО?!',sayT:1.6});splash(q.x,q.y,20,true);sfx.drown();bonus+=30;pop('СБИЛ ДО ПРЫЖКА! +30',q.x,q.y-30);o.bsay='ВИТЁК!!!';o.bsayT=1.6;return;}
   if(o.type==='jumper'){o.T=9;bonus+=30;pop('ПОМОГЛИ! +30',q.x,q.y-30);return;}
   if(o.type==='beaver'){o.dead=1;splash(q.x,q.y,16,true);sfx.dive();bonus+=30;pop('БОБЁР НЫРНУЛ! +30',q.x,q.y-24);return;}
@@ -772,13 +773,24 @@ function spawnJumper(i,side){const p=at(i),hw=p.hw;
     if(au>5.5)return((((vv|0)%14)+14)%14<3)?'#3a2410':'#6a4a2a';return((((vv|0)%4)+4)%4===0)?'#7a5028':(au<1.5?'#b88450':'#a0703c');});
   const c=wpos(i,side*(hw-10));objs.push({type:'jumper',i,side,img,x:c.x,y:c.y,ph2:'wait',T:0,bi:i,bv:side*(hw-70),gv:side*(hw+28),gh:0,wob:0,sayT:0,say:''});}
 function jGuy(o){return o.ph2==='ride'?wpos(o.bi,o.bv):wpos(o.i,o.gv);}
-function tryBoard(){let best=null,bd=26;for(const o of objs){if(o.type!=='rider'||o.fallen||o.warn>0||o.role==='boat')continue;const q=riderPos(o),d=Math.hypot(q.x-P.x,q.y-P.y);if(d<bd){bd=d;best=o;}}
-  if(!best)return false;const o=best,q=riderPos(o);
-  objs.push({type:'drift',b:P.board,x:P.x,y:P.y,a:P.a,va:rnd(-1.4,1.4),life:8,i:P.i});
-  P.board=o.b;P.x=q.x;P.y=q.y;P.a=q.a;lives=6;inv=Math.max(inv,1);
-  o.fallen=true;o.stolen=true;o.fallT=0;o.sayT=0;o.spd=6;o.swimSide=Math.random()<.5?-1:1;
-  if(o.dog){if(P.dogs.length<4&&!P.dogs.some(g=>g.kind===o.dog))P.dogs.push({kind:o.dog,pose:'sit',pt:3});else objs.push({type:'dogswim',kind:o.dog,x:q.x,y:q.y,vx:rnd(-24,24),vy:rnd(-24,24),life:5,i:P.i,ph:0});o.dog=null;}
-  splash(q.x,q.y,22,true);sfx.power();bonus+=60;banner={text:'САП ЗАХВАЧЕН! НАСОСЫ ПОЛНЫЕ!',t:2.2};pop('+60',P.x,P.y-40,'#f8d030');return true;}
+function knockBuddy(o){o.bdown=true;const q=raidPos(o);objs.push({type:'swimmer',x:q.x-6,y:q.y+5,p:BUDDY,i:P.i,life:7,say:'ЭЙ! Я ЖЕ НИЧЕГО!',sayT:1.8});
+  splash(q.x,q.y,24,true);sfx.drown();bonus+=40;pop('ПРИЯТЕЛЬ ТОЖЕ ПЛЮХ! +40',q.x,q.y-34,'#f8d030');}
+function giveDog(kind,q){if(P.dogs.length<4&&!P.dogs.some(g=>g.kind===kind))P.dogs.push({kind,pose:'sit',pt:3});
+  else objs.push({type:'dogswim',kind,x:q.x,y:q.y,vx:rnd(-24,24),vy:rnd(-24,24),life:5,i:P.i,ph:0});}
+function tryBoard(){const C=[];
+  for(const o of objs){
+    if(o.type==='rider'&&!(o.warn>0)&&o.role!=='boat'&&!o.stolen){const q=riderPos(o);C.push({x:q.x,y:q.y,a:q.a,b:o.b,full:!o.fallen,take(){o.stolen=true;
+      if(!o.fallen){o.fallen=true;o.fallT=0;o.sayT=0;o.spd=6;o.swimSide=Math.random()<.5?-1:1;}if(o.dog){giveDog(o.dog,q);o.dog=null;}}});}
+    else if(o.type==='drift'&&!(o.fresh>0))C.push({x:o.x,y:o.y,a:o.a,b:o.b,take(){o.dead=1;}});
+    else if(o.type==='parked'&&o.kind==='sup')C.push({x:o.x,y:o.y,a:o.a,b:o.b,take(){o.dead=1;}});
+    else if(o.type==='raid'&&o.st==='done'&&!o.boardTaken){const q=raidPos(o);C.push({x:q.x,y:q.y,a:q.a,b:BD.big,full:!o.bdown,take(){if(!o.bdown)knockBuddy(o);o.boardTaken=true;}});}
+    else if(o.type==='jumper'&&o.ph2==='fall'&&!o.boardTaken){const q=wpos(o.bi,o.bv);C.push({x:q.x,y:q.y,a:at(o.bi).a,b:BD.pink,take(){o.boardTaken=true;}});}}
+  let best=null,bd=26;for(const c of C){const d=Math.hypot(c.x-P.x,c.y-P.y);if(d<bd){bd=d;best=c;}}
+  if(!best)return false;
+  objs.push({type:'drift',b:P.board||BD.hero,x:P.x,y:P.y,a:P.a,va:rnd(-1.4,1.4),life:8,i:P.i,fresh:1});
+  best.take();P.board=best.b;P.x=best.x;P.y=best.y;P.a=best.a;lives=6;inv=Math.max(inv,1);
+  splash(best.x,best.y,22,true);sfx.power();const v=best.full?60:30;bonus+=v;
+  banner={text:best.full?'САП ЗАХВАЧЕН! НАСОСЫ ПОЛНЫЕ!':'НОВЫЙ САП! НАСОСЫ ПОЛНЫЕ!',t:2.2};pop('+'+v,P.x,P.y-40,'#f8d030');return true;}
 function swimTop(sx,sy,p,k){k=k||1;sx=Math.round(sx);sy=Math.round(sy);ell(sx,sy+2,Math.round(9*k),Math.max(1,Math.round(3*k)),'#d6e8d4');ell(sx,sy,Math.round(4*k),Math.round(4*k),'#181410');ell(sx,sy,Math.round(3*k),Math.round(3*k),p.skin||SKIN);
   const cc=p.cap==='hero'?'#8c6a50':p.cap||(p.hat?'#c8b478':p.hair||'#5a3a1a');ell(sx,sy-Math.round(2*k),Math.round(3*k),Math.max(1,Math.round(2*k)),cc);
   const w=Math.round(Math.sin(t*8)*3);ctx.fillStyle=SKIN;ctx.fillRect(sx-7,sy-3+w,2,3);ctx.fillRect(sx+6,sy-3-w,2,3);}
@@ -856,7 +868,7 @@ function updateObjects(dt,playing){
       else if(o.st==='leap'){o.lt+=dt/.75;if(o.lt>=1){o.st='done';const me=playing&&Math.hypot(P.x-o.tx,P.y-o.ty)<17&&P.h<10;splash(o.tx,o.ty,26,true);sfx.drown();
         if(me)hit('ПРЫГНУЛ НА ТЕБЯ!');else if(playing){bonus+=30;pop('УВЕРНУЛСЯ! +30',P.x,P.y-40,'#a4e4fc');}
         objs.push({type:'swimmer',x:o.tx,y:o.ty,p:HAWAII,i:P.i,life:7,say:me?'ИЗВИНИ, БРАТ!':'ПРОМАЗАЛ!',sayT:1.8});o.bsay='ХА-ХА-ХА!';o.bsayT=1.8;setTimeout(()=>sfx.laugh(),300);}}}
-    else if(o.type==='drift'){o.life-=dt;o.a+=o.va*dt;const n=nearestIT(o.x,o.y);if(n.i>=0){o.x+=Math.cos(PA[n.i])*18*dt;o.y+=Math.sin(PA[n.i])*18*dt;}if(o.life<=0)o.dead=1;}
+    else if(o.type==='drift'){if(o.fresh>0)o.fresh-=dt;o.life-=dt;o.a+=o.va*dt;const n=nearestIT(o.x,o.y);if(n.i>=0){o.x+=Math.cos(PA[n.i])*18*dt;o.y+=Math.sin(PA[n.i])*18*dt;}if(o.life<=0)o.dead=1;}
     else if(o.type==='dogswim'){o.life-=dt;o.x+=o.vx*dt;o.y+=o.vy*dt;if(Math.random()<dt*3)parts.push({x:o.x-o.vx*.15,y:o.y+2,vx:0,vy:0,life:.6,c:'#d6e8d4',flat:1});
       if(o.life<=0||nearestIT(o.x,o.y).t>8)o.dead=1;}
     else if(o.type==='swimmer'){o.life-=dt;if(o.life<=0)o.dead=1;const n=nearestIT(o.x,o.y);if(n.i>=0){o.x+=Math.cos(PA[n.i])*20*dt;o.y+=Math.sin(PA[n.i])*20*dt;}}
@@ -913,7 +925,7 @@ function collide(){
           if(t-(o.lastG||0)>.8){o.lastG=t;splash(P.x,P.y,6,false);sfx.bank();pop('МЕЛЬ!',P.x,P.y-36,'#e4cc92');}}
         if(!o.scored&&P.i>o.i+o.ru/STEP+6){o.scored=1;if(!o.touched){bonus+=50;sfx.hi();pop('АККУРАТНО! +50',P.x,P.y-40,'#a4e4fc');}}break;}
       case'aperol':if(Math.hypot(o.x-P.x,o.y-P.y)<16){o.dead=1;P.power=8;sfx.power();banner={text:'АПЕРОЛЬ! НЕПОБЕДИМ!',t:2};pop('АПЕРОЛЬ!',P.x,P.y-44,'#f86a1c');}break;
-      case'raid':{const q=raidPos(o);if(Math.hypot(q.x-P.x,q.y-P.y)<20&&air<12&&!(o.bump>0)){o.bump=1.5;hit('БАЦ!');}break;}
+      case'raid':{if(o.bdown)break;const q=raidPos(o);if(Math.hypot(q.x-P.x,q.y-P.y)<20&&air<12&&!(o.bump>0)){o.bump=1.5;hit('БАЦ!');}break;}
       case'raft':{if(o.sinking)break;const q=wpos(o.i,o.d);if(Math.hypot(q.x-P.x,q.y-P.y)<22&&air<12&&!(o.bump>0)){o.bump=1.6;o.ksay='ЭЙ!';o.ksayT=1;hit('ОСТОРОЖНО, СЕМЬЯ!');}
         if(!o.scored&&P.i>o.i+8){o.scored=1;if(Math.abs(o.d-latOf())<50){bonus+=25;sfx.hi();pop('ПРИВЕТ! +25',q.x,q.y-40,'#a4e4fc');}}break;}
       case'parked':if(Math.hypot(o.x-P.x,o.y-P.y)<(o.kind==='boat'?18:15)&&air<10&&!(o.bump>0)){o.bump=2;const d=Math.hypot(P.x-o.x,P.y-o.y)||1;P.x+=(P.x-o.x)/d*8;P.y+=(P.y-o.y)/d*8;hit('ТУТ ЗАНЯТО!');}if(o.bump>0)o.bump-=1/60;break;
@@ -957,17 +969,17 @@ function update(dt){
   if(state==='pause')return;
   if(state==='over'){const p0=overT;overT+=dt;
     if(p0<1.2&&overT>=1.2)tone(300,.8,'triangle',.6,0,-200);
-    if(p0<2&&overT>=2){splash(112,198,40,true);sfx.dive();}
-    if(p0<2.6&&overT>=2.6){splash(150,198,30,true);noise(.3,.6);}
+    if(p0<2&&overT>=2){splash(CX-48,H-42,40,true);sfx.dive();}
+    if(p0<2.6&&overT>=2.6){splash(CX-10,H-42,30,true);noise(.3,.6);}
     for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.life-=dt;}parts=parts.filter(p=>p.life>0);return;}
   const playing=state==='play';
   genToI(P.i+520);
   updatePlayer(dt,!playing);
-  const tx=P.x+Math.cos(P.a)*45-CX,ty=P.y+Math.sin(P.a)*45-135;
+  const tx=P.x+Math.cos(P.a)*45-CX,ty=P.y+Math.sin(P.a)*45-Math.round(H*.56);
   camX+=(tx-camX)*Math.min(1,dt*3.5);camY+=(ty-camY)*Math.min(1,dt*3.5);
   if(inv>0)inv-=dt;if(shake>0)shake-=dt;if(banner)banner.t-=dt;
   if(playing){const diff=clamp((P.maxI-250)/2600,0,1);
-    while(P.i+170>nextSpawn){spawnAt(nextSpawn,diff);nextSpawn+=Math.round(rnd(40,66)*(1-diff*.4));}}
+    while(P.i+200>nextSpawn){spawnAt(nextSpawn,diff);nextSpawn+=Math.round(rnd(40,66)*(1-diff*.4));}}
   updateObjects(dt,playing);
   if(playing)collide();
   objs=objs.filter(o=>!o.dead&&(o.role==='over'?o.i<P.i+420:true)&&(o.i===undefined||o.i>P.i-130));
@@ -1059,14 +1071,14 @@ function drawObj(o){
     case'swimmer':swimTop(SX(o.x),SY(o.y),o.p,1.15);if(o.sayT>0&&state==='play')bubble(o.say,SX(o.x),SY(o.y)-16);break;
     case'parked':{if(o.kind==='boat'){const e=boatImg(o.a);boardAt(e,SX(o.x),SY(o.y),0);ctx.drawImage(CRATE,SX(o.x)-10,SY(o.y)-9);}else boardAt(boardImg(o.b,o.a),SX(o.x),SY(o.y),0);break;}
     case'raid':{const q=raidPos(o),sx=SX(q.x),sy=SY(q.y);if(sx<-80||sx>W+80||sy<-80||sy>H+80)break;const a=q.a,fc=facingOf(a),fr=Math.floor(t*3+o.ph)%2,dx=Math.cos(a),dy=Math.sin(a);
-      boardAt(boardImg(BD.big,a),sx,sy,0);
-      const seats=[{u:-9,p:BUDDY}];if(o.st==='cruise')seats.push({u:9,p:HAWAII});
+      if(!o.boardTaken)boardAt(boardImg(BD.big,a),sx,sy,0);
+      const seats=o.bdown?[]:[{u:-9,p:BUDDY}];if(o.st==='cruise')seats.push({u:9,p:HAWAII});
       seats.map(z=>({x:sx+dx*z.u,y:sy+dy*z.u*.8,p:z.p})).sort((a2,b2)=>a2.y-b2.y).forEach(z=>personAt(z.p,fc,false,z.p===HAWAII?Math.floor(t*6)%2:fr,z.x,z.y+2));
       if(o.st==='leap'){const k=Math.min(1,o.lt),tx=SX(o.tx),ty=SY(o.ty);if(Math.floor(t*10)%2){ctx.strokeStyle='#e82020';ctx.lineWidth=1;ctx.strokeRect(tx-9,ty-5,18,10);}
         ell(tx,ty,Math.round(4+k*5),2,'rgba(0,0,0,.35)');personAt(HAWAII,'s',false,Math.floor(t*8)%2,lerp(SX(o.fx),tx,k),lerp(SY(o.fy),ty,k)-Math.sin(Math.PI*k)*30);
         if(o.sayT>0)bubble(o.say,lerp(SX(o.fx),tx,k),lerp(SY(o.fy),ty,k)-Math.sin(Math.PI*k)*30-40);}
       else if(o.sayT>0&&state==='play'&&o.st==='cruise')bubble(o.say,sx+dx*9,sy+dy*7-42);
-      if(o.bsayT>0&&state==='play')bubble(o.bsay,sx-dx*9,sy-dy*7-(o.st==='cruise'&&o.sayT>0?58:42));break;}
+      if(o.bsayT>0&&!o.bdown&&state==='play')bubble(o.bsay,sx-dx*9,sy-dy*7-(o.st==='cruise'&&o.sayT>0?58:42));break;}
     case'raft':{const q=wpos(o.i,o.d),sx=SX(q.x),sy=SY(q.y);if(sx<-80||sx>W+80||sy<-80||sy>H+80)break;const a=q.a,fc=facingOf(a),dx=Math.cos(a),dy=Math.sin(a),nx=-Math.sin(a),ny=Math.cos(a);
       const lv=Math.max(0,Math.min(3,Math.round((o.infl-.4)/.6*3))),sink=Math.round((1-o.infl)*4),fr=Math.floor(t*2.5+o.ph)%2;
       if(o.sunk){ell(sx,sy+2,16,6,'#1f5a26');ell(sx-3,sy+1,8,3,'#2e7a34');for(const[ox,oy,pp]of[[-16,-4,RF.dad],[13,3,RF.mom],[-3,11,RF.s1],[7,-10,RF.s2],[18,11,RF.s3]])swimTop(sx+ox+Math.round(Math.sin(t*2+ox)*2),sy+oy,pp,pp.k?.8:1.05);
@@ -1085,7 +1097,7 @@ function drawObj(o){
       if(o.ksayT>0&&state==='play')bubble(o.ksay,sx+nx*8,sy+ny*6-30);break;}
     case'jumper':{const p=at(o.i),sd=o.side,px0=SX(p.x),py0=SY(p.y);if(px0<-200||px0>W+200||py0<-200||py0>H+200)break;
       ctx.drawImage(o.img,px0-o.img.m,py0-o.img.m);
-      const b=wpos(o.bi,o.bv),ba=p.a+(o.ph2==='fall'?o.T*1.4:o.wob*.25);boardAt(boardImg(BD.pink,ba),SX(b.x),SY(b.y),0);
+      const b=wpos(o.bi,o.bv),ba=p.a+(o.ph2==='fall'?o.T*1.4:o.wob*.25);if(!o.boardTaken)boardAt(boardImg(BD.pink,ba),SX(b.x),SY(b.y),0);
       let g=jGuy(o);
       if(o.ph2==='fall'){g=wpos(o.bi,o.bv+sd*16);swimTop(SX(g.x),SY(g.y),HAWAII,1.15);}
       else{const fc=o.ph2==='ride'?'s':(sd<0?'e':'w'),fr=Math.floor(t*(o.ph2==='run'?10:o.ph2==='ride'?(Math.abs(o.wob)>.4?11:4):2))%2;
@@ -1134,7 +1146,7 @@ function drawHUD(){ctx.fillStyle='#000';ctx.fillRect(0,0,W,18);
   panelBox(1,1,104,16,'#1848b8');txt('ТИГР',6,5,'#fcfcfc');
   ctx.fillStyle=P.toSit?'#3cbcfc':'#f8d030';ctx.fillRect(46,4,56,10);txt(P.toSit?'СИДЯ':'СТОЯ',74,5,'#000','center');
   panelBox(107,1,66,16,'#6a4220');const ic=ICON[sel];ctx.drawImage(ic,112,Math.max(2,9-(ic.height>>1)));txt('x'+Math.ceil(INV[sel]),131,5,INV[sel]>0?'#fcfcfc':'#909090');
-  txt(String(Math.max(0,score())).padStart(6,'0'),204,5,'#fcfcfc','center');
+  txt(String(Math.max(0,score())).padStart(6,'0'),Math.round((174+W-85)/2),5,'#fcfcfc','center');
   panelBox(W-84,1,83,16,'#b81818');for(let i=0;i<6;i++)ctx.drawImage(i<lives?LIFE:LIFE_E,W-81+i*13,2);
   if(state==='play'||state==='pause'){const s2=kmNow()+' КМ';ctx.font='8px '+FONT;const w=Math.ceil(ctx.measureText(s2).width)+10;panelBox(2,H-17,w,15,'#1a6a3a');txt(s2,7,H-13,'#fcfcfc');
     P.dogs.forEach((g,k)=>{panelBox(w+5+k*24,H-17,23,15,'#6a4220');ctx.drawImage(dogSprite(g.kind,0),w+5+k*24,H-19);});}}
@@ -1174,7 +1186,7 @@ function drawTitle(){panel(24,124);
   ['ИГРАТЬ','УПРАВЛЕНИЕ'].forEach((s2,k)=>{const y=84+k*18,on=menuSel===k;if(on){ctx.fillStyle='#1848b8';ctx.fillRect(CX-70,y-4,140,15);ctx.fillStyle='#fcfcfc';ctx.fillRect(CX-70,y-4,140,1);ctx.fillRect(CX-70,y+10,140,1);}
     txt(s2,CX,y,on?'#f8d030':'#a4e4fc','center');if(on)txt('>',CX-62,y,'#f8d030');});
   txt('РЕКОРД '+String(best).padStart(6,'0'),CX,130,'#fcfcfc','center');
-  if(Math.floor(t*2)%2)txt('↑↓ ВЫБОР   ENTER - ОК',CX,222,'#f8b800','center');}
+  if(Math.floor(t*2)%2)txt('↑↓ ВЫБОР   ENTER - ОК',CX,H-20,'#f8b800','center');}
 function drawControls(){ctx.fillStyle='rgba(0,0,0,.88)';ctx.fillRect(8,22,W-16,216);ctx.fillStyle='#f8b800';ctx.fillRect(8,22,W-16,1);ctx.fillRect(8,237,W-16,1);
   txt('УПРАВЛЕНИЕ',CX,28,'#f8b800','center');
   [['← →','ПОВОРОТ'],['↑ / ↓','ГРЕСТИ / ТОРМОЗ'],['SHIFT, Z','ВСТАТЬ / СЕСТЬ'],['ПРОБЕЛ, X','ПРЫЖОК (ТОЛЬКО СТОЯ)'],['C','БРОСИТЬ ВЕЩЬ'],['ДЕРЖАТЬ C','ВОДЯНОЕ РУЖЬЁ'],['Q','СМЕНИТЬ ВЕЩЬ'],['V','УДАР ВЕСЛОМ'],['P / M','ПАУЗА / ЗВУК']]
