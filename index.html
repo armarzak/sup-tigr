@@ -400,17 +400,31 @@ const sfx={
   over(){[12,7,4,0,-5].forEach((n,i)=>tone(392*Math.pow(2,n/12),.2,'triangle',.9,i*.16));},
   dip(){noise(.06,.22);}
 };
-const MEL=[72,0,76,79,81,79,76,0,74,0,77,81,79,77,74,0,72,0,76,79,84,83,81,79,77,76,74,72,74,0,72,0];
-const BAS=[48,55,52,55,50,57,53,57,48,55,52,55,53,55,48,43];
-const mtof=m=>440*Math.pow(2,(m-69)/12);
+// laid-back summer river tune: 16 bars x 8 steps, I-vi-IV-V verses and a IV-V-iii-vi bridge
+const CHORD={G:[43,47,50],Em:[40,43,47],C:[36,40,43],D:[38,42,45],Bm:[35,38,42],Am:[45,48,52].map(n=>n-12)};
+const PROG=['G','Em','C','D','G','Em','C','D','C','D','Bm','Em','Am','D','G','G'];
+const MEL=[
+  74,0,71,0,74,76,74,0,  71,0,67,0,69,71,0,0,  72,0,76,0,74,72,71,0,  69,0,66,69,74,0,0,0,
+  74,0,71,0,74,76,79,0,  78,0,76,0,74,71,0,0,  72,74,76,0,79,0,76,74, 74,0,0,0,0,0,0,0,
+  76,0,79,0,76,0,72,0,   74,0,78,0,81,0,78,0,  74,0,71,0,74,0,78,0,   76,0,0,71,76,0,79,0,
+  72,0,76,0,81,0,79,76,  78,0,74,0,72,0,69,0,  71,0,74,0,79,0,0,0,    0,0,0,0,0,0,0,0];
+const mtof=m=>440*Math.pow(2,(m-69)/12),MSTEP=.2;
 let nextT=0,step=0;
+function shaker(when,vol){if(!ac||muted)return;const t0=ac.currentTime+Math.max(0,when),sN=ac.createBufferSource(),g=ac.createGain(),hp=ac.createBiquadFilter();
+  hp.type='highpass';hp.frequency.value=6000;sN.buffer=noiseBuf;g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+.05);
+  sN.connect(hp);hp.connect(g);g.connect(master);sN.start(t0,Math.random()*.3);sN.stop(t0+.06);}
 setInterval(()=>{
   if(!ac)return;
   if(muted||state!=='play'){nextT=ac.currentTime+.05;return;}
-  while(nextT<ac.currentTime+.15){const w=nextT-ac.currentTime,m=MEL[step%32];
-    if(m)tone(mtof(m),.13,'square',.26,w);
-    if(step%2===0){const b=BAS[(step>>1)%16];if(b)tone(mtof(b),.28,'triangle',.7,w);}
-    nextT+=.16;step++;}
+  while(nextT<ac.currentTime+.2){const w=nextT-ac.currentTime,k=step%128,bar=k>>3,pos=k&7,ch=CHORD[PROG[bar]],m=MEL[k];
+    if(m){let len=1;while(len<4&&!MEL[(k+len)%128])len++;const d=Math.min(.7,len*MSTEP*.9);tone(mtof(m),d,'square',.11,w);tone(mtof(m-12),d,'triangle',.16,w);}
+    if(pos===0)tone(mtof(ch[0]),.5,'triangle',.5,w);
+    if(pos===4)tone(mtof(ch[2]),.4,'triangle',.4,w);
+    if(pos===6)tone(mtof(ch[0]+12),.15,'triangle',.3,w);
+    if(pos===2||pos===6)tone(mtof(ch[1]+24),.12,'sine',.08,w);
+    if(pos===3||pos===7)tone(mtof(ch[2]+24),.12,'sine',.06,w);
+    if(pos%2===1)shaker(w,.05);
+    nextT+=MSTEP;step++;}
 },40);
 
 const INTRO_LEN=11.5;
