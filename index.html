@@ -952,7 +952,13 @@ const DUCKHEAD=mk(18,18,d=>{d.e(9,9,7,7,'#f8e040');d.e(7,7,4,4,'#fcf080');d.r(13
 function spawnBoss(k){bossOn=true;const B=BOSSES[k],p=at(P.i),o={type:'boss',kind:B.kind,name:B.name,s:P.i+(B.kind==='dam'?110:70),d:0,t:0,cool:2.5,iframe:0,say:'',sayT:0,ph:rnd(0,6),ang:0,ram:0,gone:0};
   if(B.kind==='dam'){genToI(o.s+200);const hw=at(o.s).hw,n=7;o.logs=[];for(let j=0;j<n;j++)o.logs.push({v:-hw+hw*2*(j+.5)/n,hp:2});o.hp=n*2;o.max=n*2;o.repT=6;spawnBeavers(o.s-6,1);}
   else{o.hp=o.max=B.kind==='duck'?14:B.kind==='nikita'?16:24;}
-  objs.push(o);banner={text:'БОСС: '+B.name+'!',t:3};sfx.warn();if(B.kind==='nikita'||B.kind==='final'){o.say='КТО ТУТ МЕНЯ ОБИЖАЕТ?!';o.sayT=2.2;}}
+  o.startI=P.i;objs.push(o);banner={text:'БОСС: '+B.name+'!',t:3};sfx.warn();if(B.kind==='nikita'||B.kind==='final'){o.say='КТО ТУТ МЕНЯ ОБИЖАЕТ?!';o.sayT=2.2;}}
+function arenaLock(){const b=objs.find(o=>o.type==='boss'&&!o.gone);if(!b)return;
+  const lo=b.kind==='dam'?b.s-80:b.startI-12,hi=b.kind==='dam'?b.s-6:1e9;
+  const wall=(idx,dir)=>{if(idx>=PX.length)return false;const k=clamp(Math.round(idx),0,PX.length-1),l=toLocal(P.x,P.y,PX[k],PY[k],PA[k]);
+    if(dir*l.u>0){P.x-=Math.cos(PA[k])*l.u;P.y-=Math.sin(PA[k])*l.u;if(dir>0)P.v=Math.min(P.v,20);return true;}return false;};
+  if(wall(hi,1)&&t-(b.wallT||0)>2){b.wallT=t;banner={text:'СНАЧАЛА РАЗБЕРИ ПЛОТИНУ!',t:1.6};}
+  if(wall(lo,-1)&&t-(b.wallT2||0)>2){b.wallT2=t;banner={text:'НАЗАД НЕЛЬЗЯ - ИДЁТ БОЙ!',t:1.4};}}
 function bossPos(o){return wpos(o.s,o.d);}
 function bossTarget(o){if(o.kind!=='dam')return bossPos(o);let best=null,bd=1e9;for(const L of o.logs){if(L.hp<=0)continue;const q=wpos(o.s,L.v),d=Math.hypot(q.x-P.x,q.y-P.y);if(d<bd){bd=d;best=q;}}return best||bossPos(o);}
 function bossHit(o,how){if(o.iframe>0||o.gone)return;const dmg=['dyna','melon','bag'].includes(how)?2:1;o.iframe=.35;const q=bossTarget(o);splash(q.x,q.y,14,false);
@@ -1243,7 +1249,7 @@ function update(dt){
     for(const p of parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.life-=dt;}parts=parts.filter(p=>p.life>0);return;}
   const playing=state==='play';
   genToI(P.i+520);
-  updatePlayer(dt,!playing);
+  updatePlayer(dt,!playing);if(playing&&bossOn)arenaLock();
   const tx=P.x+Math.cos(P.a)*45-CX,ty=P.y+Math.sin(P.a)*45-Math.round(H*.56);
   camX+=(tx-camX)*Math.min(1,dt*3.5);camY+=(ty-camY)*Math.min(1,dt*3.5);
   if(inv>0)inv-=dt;if(shake>0)shake-=dt;if(banner)banner.t-=dt;
